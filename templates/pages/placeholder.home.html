@@ -1,10 +1,30 @@
 {% extends 'layouts/main.html' %}
 {% block title %}Home{% endblock %}
 {% block content %}
-
+<meta http-equiv="refresh" content="1" >
 <div class="page-header">
-  <h1>Sticky footer with fixed navbar</h1>
+  <h1>Latest calls</h1>
 </div>
-<p class="lead">Pin a fixed-height footer to the bottom of the viewport in desktop browsers with this custom HTML and CSS. A fixed navbar has been added within <code>#wrap</code> with <code>padding-top: 60px;</code> on the <code>.container</code>.</p>
+<!--<p class="lead">Pin a fixed-height footer to the bottom of the viewport in desktop browsers with this custom HTML and CSS. A fixed navbar has been added within <code>#wrap</code> with <code>padding-top: 60px;</code> on the <code>.container</code>.</p>
+-->
+
+{% for item in calls_data %}
+{% if item.sentiment >= 5  %}
+<div class = "col-md-5 jumbotron col-md-offset-1" style="background-color:crimson">
+{% elif item.sentiment <= 4 and item.sentiment >= 2 %}
+<div class = "col-md-5 jumbotron col-md-offset-1" style="background-color:wheat">
+{% else %}
+<div class = "col-md-5 jumbotron col-md-offset-1">
+{% endif %}
+<TR>
+  <TD class="c2"><h5>ID: {{item.time}}</h5></TD>
+  <TD class="c3"><h3>Transcript: {{item.text}}</h3></TD>
+  <TD class="c4"><SPAN><h3>Urgency: {{item.sentiment}}</h3></SPAN></TD>
+  <TD class="c5"><SPAN><h4>Transcription confidence: {{item.confidence}}</h4></SPAN></TD>
+
+</TR>
+<br>
+</div>
+{% endfor %}
 
 {% endblock %}
