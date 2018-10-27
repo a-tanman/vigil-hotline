@@ -3,6 +3,7 @@
 #----------------------------------------------------------------------------#
 
 from flask import Flask, render_template, request, jsonify, redirect, url_for
+import random
 from datetime import datetime
 from flask_cors import CORS
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
@@ -12,6 +13,7 @@ import logging
 from logging import Formatter, FileHandler
 from forms import *
 import os
+from Aaron_Lib import *
 
 import io
 
@@ -57,20 +59,13 @@ calls = [
     {
         'time': str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
         'text': 'Help!',
-        'sentiment': 7, 
+        'sentiment': 6, 
         'confidence': 8
-    },
-    {
-        'time': str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
-        'text': 'I\'m lonely.',
-        'sentiment': 5, 
-        'confidence': 9
     }
 ]
 #----------------------------------------------------------------------------#
 # Controllers.
 #----------------------------------------------------------------------------#
-
 
 @app.route('/')
 def home():
@@ -104,6 +99,12 @@ def forgot():
 def recorder():
     form = ForgotForm(request.form)
     return render_template("Recorderjs-master/examples/example_simple_exportwav.html", form=form)
+
+@app.route('/recorder_mobile')
+def recorder_m():
+    form = ForgotForm(request.form)
+    return render_template("Recorderjs-master/examples/example_simple_exportwav3.html", form=form)
+
 
 # Error handlers.
 
@@ -148,11 +149,27 @@ def create_call():
     vs = analyzer.polarity_scores(text.transcript)
     print("{:-<65} {}".format(text.transcript, str(vs)))
     
-    
+    senti = round(18*vs['neg'])
+    wordlist = ['help', 'bad', 'hit', 'sad', 'lonely', 'trouble', 'pain', 'hurting']
+
+    for word in text.transcript.split():
+        if word in wordlist:
+            senti = 5
+
+
+    if senti >= 3:
+        Send_Email(["aaron.limzy@uq.net.au"] , 
+        [], 
+        "Hello. A call has been received which may be urgent.",
+        "<br><br>The transcript of this call is: {}\
+        <br><br>To check it out, go to the user dashboard at https://3463690e.ngrok.io/\
+        <br><br>Thanks,<br>Aaron".format(text.transcript),
+        [])
+
     call = {
         'id': str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
         'text': text.transcript,
-        'sentiment': round(10*vs['neg']),
+        'sentiment': senti,
         'confidence': round(10*text.confidence)
     }
     calls.append(call)
@@ -167,7 +184,6 @@ def transcribe(blob):
 
     config = types.RecognitionConfig(
         encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
-        sample_rate_hertz=48000,
         language_code='en-US')
 
     # Detects speech in the audio file
